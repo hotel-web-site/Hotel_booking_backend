@@ -1,0 +1,75 @@
+name: Slack Notification
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+       # 🔐 branch 추가 가능
+  pull_request:
+    types: [opened, reopened, closed]
+
+jobs:
+  notify:
+    runs-on: ubuntu-latest
+
+    env:
+      # 🔐 GitHub Secrets에서 가져옴
+      SLACK_GENERAL_WEBHOOK: ${{ secrets.SLACK_GENERAL_WEBHOOK }}
+      SLACK_REPO_WEBHOOK: ${{ secrets.SLACK_REPO_WEBHOOK }}
+
+      # GitHub 메타정보
+      REPO: ${{ github.repository }}
+      REF_NAME: ${{ github.ref_name }}
+      ACTOR: ${{ github.actor }}
+
+    steps:
+      - name: Send push message
+        if: ${{ github.event_name == 'push' }}
+        run: |
+          TEXT="🟢 [${REPO}] ${ACTOR}가 '${REF_NAME}' 브랜치에 push 했습니다."
+          payload=$(printf '{"text":"%s"}' "$TEXT")
+
+          # 🔔 공용 채널(#hotelhub-general)
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_GENERAL_WEBHOOK"
+
+          # 🔔 레포 전용 채널
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_REPO_WEBHOOK"
+
+      - name: Send PR opened / reopened message
+        if: ${{ github.event_name == 'pull_request' && github.event.action != 'closed' }}
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          TEXT="📝 [${REPO}] PR 생성/수정: ${PR_TITLE}\n👤 ${ACTOR}\n🔗 ${PR_URL}"
+          payload=$(printf '{"text":"%s"}' "$TEXT")
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_GENERAL_WEBHOOK"
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_REPO_WEBHOOK"
+
+      - name: Send PR merged message
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true }}
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+        run: |
+          TEXT="✅ [${REPO}] PR 머지 완료: ${PR_TITLE}\n👤 ${ACTOR}\n🔗 ${PR_URL}"
+          payload=$(printf '{"text":"%s"}' "$TEXT")
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_GENERAL_WEBHOOK"
+
+          curl -X POST -H 'Content-type: application/json' \
+            --data "$payload" \
+            "$SLACK_REPO_WEBHOOK"
