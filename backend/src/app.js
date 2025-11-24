@@ -6,9 +6,8 @@ const connectDB = require("./config/db");
 
 // 라우트 import
 const authRoutes = require("./routes/authRoutes");
-const hotelRoutes = require("./routes/hotelRoutes");
-const roomRoutes = require("./routes/roomRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
+const reviewRoutes = require("./routes/reviewRoutes")
 
 dotenv.config();
 connectDB();
@@ -25,9 +24,8 @@ app.get("/", (_req, res) => res.send("Hotel Booking API OK"));
 
 // 라우트 등록
 app.use("/api/auth", authRoutes);
-app.use("/api/hotels", hotelRoutes);
-app.use("/api/rooms", roomRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/review",reviewRoutes)
 
 // 404 처리
 app.use((req, res) => res.status(404).json({ message: "API endpoint not found" }));
