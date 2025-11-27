@@ -1,20 +1,18 @@
-const userService = require("./service");
-const { successResponse, errorResponse } = require("../common/response");
+import * as userService from "./service.js";
+import { successResponse, errorResponse } from "../common/response.js";
 
-async function register(req, res) {
+export async function register(req, res) {
     try {
         const user = await userService.registerUser(req.body);
         return res.status(201).json(
             successResponse(user.toSafeJSON(), "회원가입 성공", 201)
         );
     } catch (error) {
-        return res.status(400).json(
-            errorResponse(error.message, 400)
-        );
+        return res.status(400).json(errorResponse(error.message, 400));
     }
 }
 
-async function login(req, res) {
+export async function login(req, res) {
     try {
         const { email, password } = req.body;
         const result = await userService.loginUser(email, password);
@@ -31,9 +29,7 @@ async function login(req, res) {
                 );
 
             if (result.reason === "locked")
-                return res.status(423).json(
-                    errorResponse("계정이 잠겼습니다.", 423)
-                );
+                return res.status(423).json(errorResponse("계정이 잠겼습니다.", 423));
         }
 
         res.cookie("token", result.token, {
@@ -43,91 +39,65 @@ async function login(req, res) {
         });
 
         return res.status(200).json(
-            successResponse({
-                token: result.token,
-                user: result.user.toSafeJSON(),
-            }, "로그인 성공")
+            successResponse(
+                {
+                    token: result.token,
+                    user: result.user.toSafeJSON(),
+                },
+                "로그인 성공"
+            )
         );
     } catch (error) {
-        return res.status(500).json(
-            errorResponse(error.message, 500)
-        );
+        return res.status(500).json(errorResponse(error.message, 500));
     }
 }
 
-async function getMe(req, res) {
+export async function getMe(req, res) {
     try {
         const user = await userService.getUserById(req.user.id);
-        return res.status(200).json(
-            successResponse(user.toSafeJSON(), "내 정보 조회 성공")
-        );
+        return res.status(200).json(successResponse(user.toSafeJSON(), "내 정보 조회 성공"));
     } catch (error) {
-        return res.status(400).json(
-            errorResponse(error.message, 400)
-        );
+        return res.status(400).json(errorResponse(error.message, 400));
     }
 }
 
-async function updateProfile(req, res) {
+export async function updateProfile(req, res) {
     try {
         const updated = await userService.updateUser(req.user.id, req.body);
-        return res.status(200).json(
-            successResponse(updated, "프로필 수정 완료")
-        );
+        return res.status(200).json(successResponse(updated, "프로필 수정 완료"));
     } catch (error) {
-        return res.status(400).json(
-            errorResponse(error.message, 400)
-        );
+        return res.status(400).json(errorResponse(error.message, 400));
     }
 }
 
-async function changePassword(req, res) {
+export async function changePassword(req, res) {
     try {
-        await userService.changePassword(req.user.id, req.body.currentPassword, req.body.newPassword);
-        return res.status(200).json(
-            successResponse(null, "비밀번호 변경 완료")
+        await userService.changePassword(
+            req.user.id,
+            req.body.currentPassword,
+            req.body.newPassword
         );
+        return res.status(200).json(successResponse(null, "비밀번호 변경 완료"));
     } catch (error) {
-        return res.status(400).json(
-            errorResponse(error.message, 400)
-        );
+        return res.status(400).json(errorResponse(error.message, 400));
     }
 }
 
-async function deactivate(req, res) {
+export async function deactivate(req, res) {
     try {
         await userService.deactivateUser(req.user.id);
         res.clearCookie("token");
-        return res.status(200).json(
-            successResponse(null, "계정 비활성화 완료")
-        );
+        return res.status(200).json(successResponse(null, "계정 비활성화 완료"));
     } catch (error) {
-        return res.status(400).json(
-            errorResponse(error.message, 400)
-        );
+        return res.status(400).json(errorResponse(error.message, 400));
     }
 }
 
-async function getAllUsers(req, res) {
+export async function getAllUsers(req, res) {
     try {
         const users = await userService.getAllUsersForAdmin(req.user.id);
-
-        return res.status(200).json(
-            successResponse(users, "전체 사용자 조회 완료")
-        );
+        return res.status(200).json(successResponse(users, "전체 사용자 조회 완료"));
     } catch (error) {
-        return res.status(403).json(
-            errorResponse(error.message, 403)
-        );
+        return res.status(403).json(errorResponse(error.message, 403));
     }
 }
-
-module.exports = {
-    register,
-    login,
-    getMe,
-    updateProfile,
-    changePassword,
-    deactivate,
-    getAllUsers,
-};
