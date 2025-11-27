@@ -1,7 +1,8 @@
-const express = require("express");
-const router = express.Router();
-const { verifyToken } = require("../common/authMiddleware"); // named import
-const controller = require("./controller");
+import { Router } from "express";
+import { verifyToken } from "../common/authMiddleware.js";
+import * as controller from "./controller.js";
+
+const router = Router();
 
 router.post("/register", controller.register);
 router.post("/login", controller.login);
@@ -11,4 +12,4 @@ router.put("/change-password", verifyToken, controller.changePassword);
 router.delete("/deactivate", verifyToken, controller.deactivate);
 router.get("/users", verifyToken, controller.getAllUsers);
 
-module.exports = router;
+export default router;

@@ -1,9 +1,9 @@
-const User = require("./model");
-const { makeToken } = require("../common/jwtService"); // jwtService 불러오기
+import User from "./model.js";
+import { makeToken } from "../common/jwtService.js";
 
 const LOCK_MAX = 5;
 
-async function registerUser(data) {
+export async function registerUser(data) {
     const { name, email, password, phoneNumber, address, dateOfBirth, role } = data;
 
     const exists = await User.findOne({ email: email.toLowerCase().trim() });
@@ -25,7 +25,7 @@ async function registerUser(data) {
     return user;
 }
 
-async function loginUser(email, password) {
+export async function loginUser(email, password) {
     const user = await User.findOne({
         email: email.toLowerCase().trim(),
         isActive: true,
@@ -49,26 +49,25 @@ async function loginUser(email, password) {
         return { ok: false, reason: "invalid", user, remaining };
     }
 
-    // 로그인 성공
     user.loginAttempts = 0;
     user.isLoggined = true;
     user.lastLogin = new Date();
     await user.save();
 
-    const token = makeToken(user); // jwtService에서 토큰 생성
+    const token = makeToken(user);
 
     return { ok: true, token, user };
 }
 
-async function getUserById(id) {
+export async function getUserById(id) {
     return User.findById(id);
 }
 
-async function updateUser(id, updateData) {
+export async function updateUser(id, updateData) {
     return User.findByIdAndUpdate(id, updateData, { new: true }).select("-passwordHash");
 }
 
-async function changePassword(id, currentPassword, newPassword) {
+export async function changePassword(id, currentPassword, newPassword) {
     const user = await User.findById(id);
     if (!user) throw new Error("사용자 없음");
 
@@ -79,23 +78,13 @@ async function changePassword(id, currentPassword, newPassword) {
     await user.save();
 }
 
-async function deactivateUser(id) {
+export async function deactivateUser(id) {
     return User.findByIdAndUpdate(id, { isActive: false, isLoggined: false });
 }
 
-async function getAllUsersForAdmin(adminId) {
+export async function getAllUsersForAdmin(adminId) {
     const admin = await User.findById(adminId);
     if (!admin || admin.role !== "admin") throw new Error("권한 없음");
 
     return User.find().select("-passwordHash");
 }
-
-module.exports = {
-    registerUser,
-    loginUser,
-    getUserById,
-    updateUser,
-    changePassword,
-    deactivateUser,
-    getAllUsersForAdmin,
-};
