@@ -13,7 +13,6 @@ const TOSS_SECRET_KEY = Buffer.from(
 ).toString("base64");
 
 const PaymentService = {
-    // 결제 준비
     preparePayment: async ({ userId, bookingId }) => {
         const booking = await Booking.findById(bookingId).populate("room hotel");
         if (!booking) throw new Error("예약을 찾을 수 없습니다.");
@@ -32,7 +31,6 @@ const PaymentService = {
         return { payment, amount, orderId };
     },
 
-    // 결제 승인
     confirmPayment: async ({ orderId, paymentKey, amount }) => {
         const url = "https://api.tosspayments.com/v1/payments/confirm";
 
@@ -58,15 +56,14 @@ const PaymentService = {
         return payment;
     },
 
-    // 결제 취소
     cancelPayment: async ({ bookingId }) => {
         const payment = await Payment.findOne({ booking: bookingId });
         if (!payment) throw new Error("결제 내역이 존재하지 않습니다.");
         if (payment.status !== "paid")
             throw new Error("결제 완료 상태만 취소할 수 있습니다.");
 
+        // Toss 환불 요청
         const url = `https://api.tosspayments.com/v1/payments/${payment.paymentKey}/cancel`;
-
         const response = await axios.post(
             url,
             { cancelReason: "User Request" },
@@ -78,11 +75,19 @@ const PaymentService = {
             }
         );
 
+        // Payment 상태 업데이트
         payment.status = "cancelled";
         payment.raw = response.data;
         await payment.save();
 
-        return payment;
+        // Booking 상태 업데이트
+        const booking = await Booking.findById(bookingId);
+        if (!booking) throw new Error("예약을 찾을 수 없습니다.");
+        booking.status = "cancelled";
+        booking.refunded = true;
+        await booking.save();
+
+        return { payment, booking };
     },
 };
 
