@@ -9,10 +9,9 @@
 
 import createError from 'http-errors';
 import Booking from './model.js';
-
-// 아래 Hotel, Room 모델은 네 구조에 맞춰 경로 변경 가능
 import { Room } from '../room/model.js';
-import Hotel  from '../hotel/model.js';
+import Hotel from '../hotel/model.js';
+import PaymentService from '../payment/service.js'; // 추가
 
 // 특정 객실에 대해 날짜 중복 예약 여부 체크
 async function isRoomBooked(roomId, checkIn, checkOut) {
@@ -86,7 +85,15 @@ export const BookingService = {
         const booking = await Booking.findById(bookingId);
         if (!booking) throw createError(404, '예약을 찾을 수 없습니다.');
 
-        // TODO: Toss 환불 로직 필요 (confirmed 상태일 때만)
+        // 결제 완료 상태면 PaymentService 호출
+        if (booking.status === 'confirmed' || booking.status === 'booked') {
+            const { payment, booking: updatedBooking } = await PaymentService.cancelPayment({
+                bookingId,
+            });
+            return updatedBooking; // 상태 업데이트된 booking 반환
+        }
+
+        // 결제 없는 예약이면 단순 취소
         booking.status = 'cancelled';
         return await booking.save();
     },
