@@ -4,6 +4,7 @@ import Booking from '../booking/model.js';
 
 /**
  * 사용자용 호텔 검색
+ * 객실이 없어도 호텔은 반환
  */
 export async function searchHotels({
     name,
@@ -15,13 +16,14 @@ export async function searchHotels({
     checkIn,
     checkOut,
 }) {
-    // 호텔 기본 쿼리
+    // 1️⃣ 호텔 기본 쿼리 생성
     const hotelQuery = {};
     if (name) hotelQuery.name = { $regex: name, $options: 'i' };
     if (city) hotelQuery.city = { $regex: city, $options: 'i' };
 
     let hotels = await Hotel.find(hotelQuery).lean();
 
+    // 2️⃣ 호텔별 객실 조회 및 필터링
     for (let hotel of hotels) {
         // 객실 기본 쿼리
         let roomQuery = { hotel: hotel._id, status: 'available' };
@@ -30,7 +32,7 @@ export async function searchHotels({
 
         let rooms = await Room.find(roomQuery).lean();
 
-        // 예약된 객실 제거
+        // 예약된 객실 제외
         if (checkIn && checkOut) {
             const ci = new Date(checkIn);
             const co = new Date(checkOut);
@@ -56,12 +58,11 @@ export async function searchHotels({
             });
         }
 
+        // 호텔에 rooms 배열 그대로 할당
         hotel.rooms = rooms;
     }
 
-    // 객실 없는 호텔 제거
-    hotels = hotels.filter(h => h.rooms.length > 0);
-
+    // 🔹 객실 없는 호텔도 반환
     return hotels;
 }
 
