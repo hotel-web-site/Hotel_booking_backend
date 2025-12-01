@@ -1,7 +1,3 @@
-// -------------------------------
-// Payment Model (ESM)
-// -------------------------------
-
 import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 
@@ -18,14 +14,15 @@ const paymentSchema = new Schema(
             required: true,
         },
         paymentKey: String,
-        orderId: { type: String, required: true },
+        orderId: { type: String, required: true, unique: true }, // 주문 ID는 고유해야 함
         amount: { type: Number, required: true },
         status: {
             type: String,
             enum: ["pending", "paid", "cancelled", "failed"],
             default: "pending",
         },
-        raw: Object, // Toss API 응답 전체 저장
+        raw: Object, // PG사 API 응답 전체 저장
+        paymentType: String, // 카드, 계좌이체 등
     },
     { timestamps: true }
 );
