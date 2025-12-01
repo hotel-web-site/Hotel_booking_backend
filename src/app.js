@@ -8,6 +8,8 @@ import authRoutes from "./user/route.js";
 import bookingRoutes from "./booking/route.js";
 import reviewRoutes from "./review/route.js";
 import paymentRoutes from "./payment/route.js";
+import hotelRoutes from "./hotel/route.js"
+import roomRoutes from './room/route.js';
 
 import { errorResponse } from "./common/response.js";
 
@@ -26,6 +28,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/bookings", bookingRoutes);
 app.use("/api/review", reviewRoutes);
 app.use("/api/payment", paymentRoutes);
+app.use("/api/hotels",hotelRoutes)
+app.use('/api/rooms', roomRoutes);
 
 // 404
 app.use((req, res) => {
