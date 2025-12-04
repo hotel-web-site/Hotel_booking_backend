@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose from "mongoose"; // require 대신 import 사용
 
 const connectDB = async () => {
     try {
@@ -10,4 +10,5 @@ const connectDB = async () => {
     }
 };
 
-module.exports = connectDB;
+// module.exports 대신 export default 사용
+export default connectDB;
