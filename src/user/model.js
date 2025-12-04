@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-const { Schema } = mongoose;
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const SALT_WORK_FACTOR = 10;
@@ -70,4 +69,7 @@ userSchema.pre("save", async function (next) {
 
 userSchema.index({ email: 1 }, { unique: true });
 
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+
+// CommonJS의 'module.exports' 대신 ESM의 'export default' 사용
+export default User;
