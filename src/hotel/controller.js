@@ -1,52 +1,49 @@
 import * as hotelService from './service.js';
 import { successResponse, errorResponse } from '../common/response.js';
 
-// ------------------------------------------------------------------------
-// 1. 전체 호텔 검색 및 필터링 (사용자용)
-// 라우트: GET /api/hotels (혹은 /api/hotels/search)
-// ------------------------------------------------------------------------
-export const getAllHotels = async (req, res) => {
+// 전체 호텔 검색 (사용자용) - 라우트의 hotelController.getHotels와 이름 통일
+export const getHotels = async (req, res) => {
     try {
-        // req.query를 서비스 계층으로 전달하여 검색 및 필터링 수행
         const hotels = await hotelService.searchHotels(req.query);
-
-        if (!hotels || hotels.length === 0) {
-            return res.status(200).json(successResponse([], '검색 조건에 맞는 호텔이 없습니다.'));
-        }
-
         return res.json(successResponse(hotels, '호텔 검색 완료'));
     } catch (err) {
-        console.error("호텔 검색 처리 중 에러:", err.message);
-        return res.status(500).json(errorResponse('호텔 검색 처리 중 서버 오류가 발생했습니다.', 500));
+        return res.status(500).json(errorResponse(err.message, 500));
     }
 };
 
-// ------------------------------------------------------------------------
-// 2. 특정 호텔 상세 조회 (가용 객실 포함)
-// 라우트: GET /api/hotels/:hotelId?checkIn=...&checkOut=...
-// ------------------------------------------------------------------------
-export const getHotelById = async (req, res) => {
+// 특정 호텔 상세 조회 (사용자용) - 라우트의 hotelController.getHotelDetail과 이름 통일
+export const getHotelDetail = async (req, res) => {
     try {
         const { hotelId } = req.params;
         const { checkIn, checkOut } = req.query;
 
-        // 서비스 계층 함수 호출: 호텔 정보와 가용 객실 목록을 가져옴
+        // 호텔 및 객실 정보 로딩
         const hotel = await hotelService.getHotelWithRooms(hotelId, checkIn, checkOut);
 
+        // 데이터가 없으면 404 처리 (서비스에서 에러를 throw 했다고 가정)
         if (!hotel) {
-            // 서비스에서 '호텔을 찾을 수 없습니다.' 오류를 throw 했을 경우 처리
-            return res.status(404).json(errorResponse('요청하신 호텔을 찾을 수 없습니다.', 404));
+            return res.status(404).json(errorResponse('해당 호텔을 찾을 수 없습니다.', 404));
         }
 
         return res.json(successResponse(hotel, '호텔 조회 완료'));
     } catch (err) {
-        console.error("호텔 상세 조회 중 에러:", err.message);
+        // 서비스에서 발생한 에러 처리 (일반적으로 404가 아닌 500으로 처리하는 것이 안전함)
+        return res.status(500).json(errorResponse(err.message, 500));
+    }
+};
 
-        // 서비스에서 발생시킨 특정 오류 메시지를 404로 처리 (예외 처리 구체화)
-        if (err.message === '호텔을 찾을 수 없습니다.') {
-            return res.status(404).json(errorResponse(err.message, 404));
-        }
+// 🌟 특정 호텔의 객실 목록 조회 (프런트엔드 hotelClient.js에서 요청하는 함수)
+export const getHotelRooms = async (req, res) => {
+    try {
+        const { hotelId } = req.params;
+        const { checkIn, checkOut } = req.query;
 
-        return res.status(500).json(errorResponse('호텔 상세 조회 처리 중 서버 오류가 발생했습니다.', 500));
+        // 서비스 계층에서 해당 호텔의 가용 객실 목록만 가져온다고 가정
+        const rooms = await hotelService.getAvailableRooms(hotelId, checkIn, checkOut);
+
+        return res.json(successResponse(rooms, '호텔 객실 목록 조회 완료'));
+    } catch (err) {
+        // 객실 목록 조회 실패 시 500 에러 처리
+        return res.status(500).json(errorResponse(err.message, 500));
     }
 };
