@@ -1,29 +1,23 @@
-// src/room/service.js
-// -------------------------------------------
-// Room 관련 DB 처리 서비스
-// 생성, 조회, 수정, 삭제 기능 제공
-// -------------------------------------------
-
-import { Room } from './model.js';
+import { Room } from "./model.js";
+import mongoose from "mongoose";
 
 export const RoomService = {
-    create: async (data) => {
-        return await Room.create(data);
-    },
+    create: async (data) => await Room.create(data),
 
     findByHotel: async (hotelId) => {
-        return await Room.find({ hotel: hotelId });
+        if (!mongoose.Types.ObjectId.isValid(hotelId)) return [];
+        return await Room.find({ hotel: mongoose.Types.ObjectId(hotelId) });
     },
 
-    findById: async (id) => {
-        return await Room.findById(id).populate('hotel'); // hotel 정보도 가져오기
+    // 호텔별 룸 조회
+    getRoomsByHotel: async (hotelId) => {
+        if (!mongoose.Types.ObjectId.isValid(hotelId)) return [];
+        return await Room.find({ hotel: mongoose.Types.ObjectId(hotelId) });
     },
 
-    update: async (id, updateData) => {
-        return await Room.findByIdAndUpdate(id, updateData, { new: true });
-    },
+    findById: async (id) => await Room.findById(id).populate("hotel"),
 
-    delete: async (id) => {
-        return await Room.findByIdAndDelete(id);
-    },
+    update: async (id, updateData) => await Room.findByIdAndUpdate(id, updateData, { new: true }),
+
+    delete: async (id) => await Room.findByIdAndDelete(id),
 };
