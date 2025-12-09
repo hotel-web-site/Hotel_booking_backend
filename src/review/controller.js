@@ -1,15 +1,22 @@
 import reviewService from "./service.js";
 import { successResponse, errorResponse } from "../common/response.js";
+// 💡 [수정] 호텔 통계 업데이트를 위한 서비스/유틸리티 함수 import (경로 확인 필수)
+import { updateHotelStats } from '../../hotel/service.js';
 
 // 리뷰 생성
 export const createReview = async (req, res) => {
     try {
+        // 1. 리뷰 서비스 호출 (DB 저장)
         const review = await reviewService.createReview({
             userId: req.user.id,
             hotel: req.body.hotel,
             rating: req.body.rating,
             comment: req.body.comment,
         });
+
+        // 💡 [핵심 추가]: 리뷰 생성 후, 해당 호텔의 평점 통계 업데이트
+        // 이 로직이 있어야 HotelDetailPage에서 최신 ratingAverage와 ratingCount를 가져옵니다.
+        await updateHotelStats(review.hotel);
 
         return res.status(201).json(
             successResponse(review, "리뷰 생성 완료", 201)
@@ -98,6 +105,9 @@ export const updateReview = async (req, res) => {
 
         const updated = await reviewService.updateReview(review, req.body);
 
+        // 💡 [추가]: 리뷰 수정 후 통계 업데이트 (선택적: 평점이 변경되었을 경우)
+        // await updateHotelStats(review.hotel); 
+
         return res.status(200).json(
             successResponse(updated, "리뷰 수정 완료")
         );
@@ -124,6 +134,9 @@ export const deleteReview = async (req, res) => {
 
         await reviewService.deleteReview(review);
 
+        // 💡 [핵심 추가]: 리뷰 삭제 후, 해당 호텔의 평점 통계 업데이트
+        await updateHotelStats(review.hotel);
+
         return res.status(200).json(
             successResponse(null, "리뷰 삭제 완료")
         );
@@ -133,4 +146,3 @@ export const deleteReview = async (req, res) => {
         );
     }
 };
-

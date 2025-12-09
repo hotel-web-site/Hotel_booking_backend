@@ -1,7 +1,9 @@
+// src/hotel/service.js (수정된 코드)
+
 import mongoose from "mongoose";
 import { Hotel } from "./model.js";
-import { RoomService } from "../room/service.js";
-import Review from "../review/model.js";
+import { RoomService } from "../room/service.js"; // RoomService import
+import Review from "../review/model.js"; // Review model import (목록 조회에서 사용되지 않으므로 제거 가능하지만, 여기서는 유지)
 
 // 호텔 목록 조회
 export const listHotels = async ({ city, guests, type, freebies }) => {
@@ -35,29 +37,33 @@ export const listHotels = async ({ city, guests, type, freebies }) => {
 export const getHotelDetail = async (id) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
         const err = new Error("INVALID_HOTEL_ID");
-        err.statusCode = 400;
+        err.statusCode = 400; // 400: 클라이언트 요청 오류
         throw err;
     }
 
-    const hotel = await Hotel.findById(mongoose.Types.ObjectId(id));
+    // ✅ 수정: new 키워드 사용 (이전 로그에서 발생한 오류 방지)
+    const hotel = await Hotel.findById(new mongoose.Types.ObjectId(id));
+
     if (!hotel) {
         const err = new Error("HOTEL_NOT_FOUND");
-        err.statusCode = 404;
+        err.statusCode = 404; // 404: 리소스를 찾을 수 없음
         throw err;
     }
 
-    const rooms = await RoomService.getRoomsByHotel(id);
+    // 🚨 중요 수정: 컨트롤러가 Room과 Review를 병렬로 가져오므로, 
+    // 서비스는 순수한 Hotel 객체만 반환하도록 단순화합니다.
+    return hotel;
 
-    const reviews = await Review.find({ hotel: mongoose.Types.ObjectId(id) })
-        .populate("user", "name")
-        .sort({ createdAt: -1 });
-
-    return { hotel, rooms, reviews };
+    // (참고: 기존에 아래 코드를 서비스에서 처리했지만, 프론트엔드가 병렬로 요청하므로 제거)
+    // const rooms = await RoomService.findByHotel(id); 
+    // const reviews = await Review.find({ hotel: new mongoose.Types.ObjectId(id) })...;
+    // return { hotel, rooms, reviews }; 
 };
 
 // 호텔별 룸 목록
 export const listRoomsByHotel = async (id) => {
-    return RoomService.getRoomsByHotel(id);
+    // ✅ 수정: RoomService.getRoomsByHotel을 RoomService.findByHotel로 변경
+    return RoomService.findByHotel(id);
 };
 
 // 추천 호텔
