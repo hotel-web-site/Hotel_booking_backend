@@ -1,22 +1,33 @@
-import mongoose from "mongoose";
+import { Schema, model } from 'mongoose';
 
-const noticeSchema = new mongoose.Schema({
-    title: {
-        type: String,
-        required: [true, "제목은 필수입니다."]
+const noticeSchema = new Schema(
+    {
+        title: {
+            type: String,
+            required: true,
+            trim: true,
+        },
+        content: {
+            type: String,
+            required: true,
+        },
+        // 작성자 (관리자 ID)
+        author: {
+            type: Schema.Types.ObjectId,
+            ref: 'User',
+            required: true,
+        },
+        // 공지 이미지 (S3 URL)
+        images: [
+            { type: String },
+        ],
+        // 중요 공지 여부 (상단 고정용)
+        isImportant: {
+            type: Boolean,
+            default: false,
+        },
     },
-    content: {
-        type: String,
-        required: [true, "내용은 필수입니다."]
-    },
-    isPinned: {
-        type: Boolean,
-        default: false
-    }, // 상단 고정 여부
-    views: {
-        type: Number,
-        default: 0
-    },
-}, { timestamps: true });
+    { timestamps: true }
+);
 
-export const Notice = mongoose.model("Notice", noticeSchema);
+export default model('Notice', noticeSchema);
