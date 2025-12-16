@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import axios from "axios";
-import { User } from "../user/model.js";
+import User from "../user/model.js";
 
 const signToken = (id) => {
     return jwt.sign({ id }, process.env.JWT_SECRET || "fallback_secret", { expiresIn: "30d" });
