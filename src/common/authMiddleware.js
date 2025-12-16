@@ -1,6 +1,6 @@
 import jwt from "jsonwebtoken";
 import { errorResponse } from "./response.js";
-import { User } from "../user/model.js"; // 유저 모델 임포트 필요
+import User  from "../user/model.js"; // 유저 모델 임포트 필요
 
 // 1. 로그인 여부 및 토큰 유효성 검사
 export const verifyToken = async (req, res, next) => {

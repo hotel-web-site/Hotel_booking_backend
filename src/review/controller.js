@@ -1,7 +1,7 @@
 import reviewService from "./service.js";
 import { successResponse, errorResponse } from "../common/response.js";
 // 호텔 통계 업데이트 함수 임포트
-import { updateHotelStats } from "../hotel/service.js";
+import {updateHotelStats} from "../hotel/service.js";
 
 // 1. 리뷰 생성
 export const createReview = async (req, res) => {

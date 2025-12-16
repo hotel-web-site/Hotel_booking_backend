@@ -87,3 +87,32 @@ export const getFeaturedHotels = async (limit = 10) => {
         .limit(limit)
         .lean();
 };
+
+// 5. 호텔 통계 업데이트 (리뷰 작성/삭제 시 호출)
+export const updateHotelStats = async (hotelId) => {
+    // 1. 해당 호텔의 모든 리뷰를 가져와서 평균과 개수 계산
+    const stats = await mongoose.model("Review").aggregate([
+        { $match: { hotelId: new mongoose.Types.ObjectId(hotelId) } },
+        {
+            $group: {
+                _id: "$hotelId",
+                nRating: { $sum: 1 },
+                avgRating: { $avg: "$rating" },
+            },
+        },
+    ]);
+
+    if (stats.length > 0) {
+        // 2. 계산된 통계를 호텔 문서에 업데이트
+        await Hotel.findByIdAndUpdate(hotelId, {
+            ratingCount: stats[0].nRating,
+            ratingAverage: Math.round(stats[0].avgRating * 10) / 10, // 소수점 첫째자리까지
+        });
+    } else {
+        // 3. 리뷰가 하나도 없는 경우 초기화
+        await Hotel.findByIdAndUpdate(hotelId, {
+            ratingCount: 0,
+            ratingAverage: 0,
+        });
+    }
+};
