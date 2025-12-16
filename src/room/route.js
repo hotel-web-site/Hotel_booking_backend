@@ -11,7 +11,7 @@ import {
 const router = Router();
 
 // 호텔별 객실 조회 (공개)
-router.get("/hotel/:hotelId", getRoomsByHotel);
+router.get("/:hotelId", getRoomsByHotel);
 
 // 특정 객실 조회 (공개)
 router.get("/:id", getRoomById);

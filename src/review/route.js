@@ -7,7 +7,7 @@ const router = Router();
 router.post("/", verifyToken, reviewController.createReview);
 router.get("/", reviewController.getAllReviews);
 
-router.get("/hotel/:hotelId", reviewController.getReviewsByHotel);
+router.get("/:hotelId", reviewController.getReviewsByHotel);
 router.get("/user/me", verifyToken, reviewController.getReviewsByUser);
 
 router.get("/:id", reviewController.getReviewById);
